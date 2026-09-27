@@ -41,7 +41,7 @@ class aidriver():
         print("init")
         self.driver.execute_script("arguments[0].focus();", editor)
         
-    def wait_for_new_message(self, old_count, timeout=15):
+    def _wait_for_new_message(self, old_count, timeout=15):
     
         start_time = time.time()
         while True:
@@ -55,7 +55,7 @@ class aidriver():
             time.sleep(0.3)
 
 
-    def msg(self,message, timeout=15):
+    def send_msg(self,message, timeout=15):
         editor = self.driver.find_element(By.CSS_SELECTOR, 'div[contenteditable="true"]')
         editor.send_keys(message)
         time.sleep(0.2)
@@ -63,10 +63,10 @@ class aidriver():
         
         old_count = len(self.driver.find_elements(By.CSS_SELECTOR, 'div.markdown-main-panel'))
         
-        self.wait_for_new_message(old_count, timeout)
+        self._wait_for_new_message(old_count, timeout)
     
 
-    def get_last_message_text(self):
+    def _get_last_message_text(self):
         try:
             containers = self.driver.find_elements(By.CSS_SELECTOR, 'div.markdown-main-panel')
             if containers:
@@ -80,12 +80,13 @@ class aidriver():
             return len(stop_buttons) > 0
         except Exception:
             return False
-    def get_full_msg(self):
+    def get_stream_answer(self):
         last_printed_len = 0
         last_change_time = time.time()
-        
+
+        _ovr = False
         while True:
-            current_text = self.get_last_message_text()
+            current_text = self._get_last_message_text()
             
             if len(current_text) > last_printed_len:
                 yield current_text[last_printed_len:]
@@ -93,7 +94,10 @@ class aidriver():
                 last_change_time = time.time() 
 
             if not self._is_generating():
-                break
+                _ovr = True
+                time.sleep(0.5)
+                if (_ovr):
+                    break
             
     
 
